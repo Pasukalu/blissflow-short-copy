@@ -72,6 +72,7 @@
         <div class="actions">
           <button class="secondary" onclick="copyResult()">📋 複製</button>
           <button class="secondary" onclick="downloadResult()">💾 下載 TXT</button>
+          <button id="continueBtn" class="secondary" onclick="continueGenerate()" style="display:none;">⏭️ 繼續生成</button>
         </div>
       </div>
       <div id="resultContent" class="result"></div>
@@ -86,6 +87,7 @@
   <script>
     let history = [];
     let currentResult = '';
+    let currentProductName = '';
 
     async function generate() {
       const name = document.getElementById('productName').value.trim();
@@ -122,9 +124,12 @@
         status.className = 'status show success';
         status.textContent = '✅ 生成完成！';
 
+        currentProductName = name;
+        currentResult = data.content;
         document.getElementById('resultCard').style.display = 'block';
         document.getElementById('resultTitle').textContent = name;
         document.getElementById('resultContent').textContent = data.content;
+        document.getElementById('continueBtn').style.display = 'inline-block';
 
         // 加入歷史
         history.unshift({
@@ -175,12 +180,52 @@
     function showHistory(i) {
       const h = history[i];
       currentResult = h.content;
+      currentProductName = h.name;
       document.getElementById('resultCard').style.display = 'block';
       document.getElementById('resultTitle').textContent = h.name;
       document.getElementById('resultContent').textContent = h.content;
       document.getElementById('productName').value = h.name;
       document.getElementById('productUrl').value = h.url;
+      document.getElementById('continueBtn').style.display = 'inline-block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function continueGenerate() {
+      const btn = document.getElementById('continueBtn');
+      const status = document.getElementById('status');
+
+      btn.disabled = true;
+      status.className = 'status show loading';
+      status.textContent = '⏳ 繼續生成中...';;
+
+      try {
+        const resp = await fetch('http://localhost:8000/api/continue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_name: currentProductName,
+            previous_content: currentResult,
+          }),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.detail || '繼續生成失敗');
+        }
+
+        const data = await resp.json();
+        currentResult = currentResult + '\n\n' + data.content;
+        document.getElementById('resultContent').textContent = currentResult;
+
+        status.className = 'status show success';
+        status.textContent = '✅ 繼續生成完成！';
+
+      } catch (e) {
+        status.className = 'status show error';
+        status.textContent = '❌ ' + e.message;
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     renderHistory();

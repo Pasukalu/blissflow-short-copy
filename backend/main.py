@@ -29,15 +29,45 @@ class GenerateRequest(BaseModel):
     product_name: str
 
 
-class CopyItem(BaseModel):
-    language: str
-    index: int
-    content: str
+class ContinueRequest(BaseModel):
+    product_name: str
+    previous_content: str
 
 
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.post("/api/continue")
+async def continue_short_copy(req: ContinueRequest):
+    """繼續生成被截斷的文案"""
+    headers = {
+        "Authorization": f"Bearer {DASHSCOPE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": "qwen-plus",
+        "messages": [
+            {"role": "system", "content": SHORT_COPY_SYSTEM_PROMPT},
+            {"role": "user", "content": f"繼續生成剩餘的文案，從上次中斷的地方接著寫。以下是已生成的內容：\n\n{req.previous_content}"},
+        ],
+    }
+
+    async with httpx.AsyncClient(timeout=120) as client:
+        resp = await client.post(DASHSCOPE_URL, headers=headers, json=payload)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"DashScope error: {resp.text}")
+
+        data = resp.json()
+        content = data["choices"][0]["message"]["content"]
+
+    return {
+        "product_name": req.product_name,
+        "content": content,
+        "usage": data.get("usage", {}),
+    }
 
 
 @app.post("/api/generate")
