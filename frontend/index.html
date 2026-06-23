@@ -43,7 +43,7 @@
     .result-section:last-child { margin-bottom: 0; }
     .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .result-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-    .result-content { white-space: pre-wrap; word-break: break-word; font-size: 13px; line-height: 1.7; background: #f9fafb; padding: 14px; border-radius: 8px; border: 1px solid #eee; }
+    .result-content { white-space: pre-wrap; word-break: break-word; font-size: 13px; line-height: 1.7; background: #f9fafb; padding: 14px; border-radius: 8px; border: 1px solid #eee; max-height: 500px; overflow-y: auto; }
 
     .actions { display: flex; gap: 8px; }
     .actions button { font-size: 12px; padding: 6px 12px; }
@@ -62,17 +62,20 @@
     .dot-video { background: #3b82f6; }
     .dot-all { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
 
-    .progress-bar { display: flex; gap: 4px; margin-top: 8px; }
-    .progress-item { flex: 1; height: 4px; border-radius: 2px; background: #e5e7eb; transition: background 0.3s; }
-    .progress-item.done { background: #10b981; }
-    .progress-item.active { background: #3b82f6; animation: pulse 1s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .settings-link { text-align: center; margin-top: 8px; }
+    .settings-link a { color: #7c3aed; font-size: 13px; cursor: pointer; text-decoration: underline; }
+
+    .settings-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+    .settings-modal.show { display: flex; }
+    .settings-box { background: white; border-radius: 12px; padding: 24px; width: 400px; max-width: 90%; }
+    .settings-box h3 { font-size: 18px; margin-bottom: 16px; }
+    .settings-box .close { float: right; cursor: pointer; font-size: 20px; color: #999; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>✍️ 文案生成器</h1>
-    <p class="subtitle">BlissShop · Qwen AI · 短文案 / 長文案 / 視頻文案</p>
+    <p class="subtitle">BlissShop · Qwen AI · 短文案 / 長文案 / 視頻文案 · 純前端無需後端</p>
 
     <!-- 輸入區 -->
     <div class="card">
@@ -87,6 +90,9 @@
         </div>
       </div>
       <button id="generateAllBtn" class="all" onclick="generateAll()">🚀 一鍵生成三種文案</button>
+      <div class="settings-link">
+        <a onclick="openSettings()">⚙️ 設定 API Key</a>
+      </div>
     </div>
 
     <div id="status" class="status"></div>
@@ -100,10 +106,7 @@
         </div>
       </div>
 
-      <!-- Tab 切換 -->
       <div class="tabs" id="resultTabs"></div>
-
-      <!-- 各文案內容 -->
       <div id="resultSections"></div>
     </div>
 
@@ -114,12 +117,60 @@
     </div>
   </div>
 
+  <!-- 設定 Modal -->
+  <div class="settings-modal" id="settingsModal">
+    <div class="settings-box">
+      <span class="close" onclick="closeSettings()">&times;</span>
+      <h3>⚙️ 設定</h3>
+      <label>DashScope API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="sk-..." />
+      <label style="margin-top:12px;">模型</label>
+      <input type="text" id="modelInput" placeholder="qwen-plus" value="qwen-plus" />
+      <div style="margin-top:16px;display:flex;gap:8px;">
+        <button onclick="saveSettings()">💾 保存</button>
+        <button class="secondary" onclick="closeSettings()">取消</button>
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:#999;">API Key 保存在瀏覽器 localStorage，不會上傳任何地方。</p>
+    </div>
+  </div>
+
   <script>
-    let history = [];
-    let currentResult = null; // { short: {content, error}, long: {...}, video: {...} }
-    let currentProductName = '';
-    let currentProductUrl = '';
-    let activeTab = 'short';
+    // ==================== 配置 ====================
+    const DASHSCOPE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+
+    const PROMPTS = {
+      short: `你是一個電商專家. 這是你經營的國際電商獨立站 www.blissshop.life , 我會比不同的產品名稱及連結比你, 你分別用地道的廣東話, 日文, 及英文, 用20種不同表達方式(就是給我創作20個文案), 每個表達只有2-6句就可以, 每句需要加上emojis及這句"本店所有產品支援全球送貨". 目的是要針對人的痛點或挑起人的情感及購買慾, 立即去下單購買.`,
+      long: `你是一個電商專家, 你是幫我的網店(www.blissshop.life)內的產品 , 去創作文案, 在不同的社交平台上發表. 我會把產品的連結給你, 你幫我參考以下文案, 來創作出6遍(不同內容風格)跟我給你的產品的介紹內容給我. 要比埋emojis比我。 另外每個文案的結尾幫我加上一句： 本店所有產品支援全球送貨。
+
+參考文案:
+日本Scour Towels 廚房環保不織布抹布
+💯一套6卷💯
+激抵呀～～～～
+日本原價 $38/卷
+依家 $6.5 /卷，好好用架～
+最抵最抵最抵
+,超超超抵呀🈹🈹🈹🈹🈹
+勁好用推薦‼️傳統抹布潛藏大量細菌，比馬桶還髒，有害健康，不織布免洗式多用抹布，乾濕兩用，點斷式設計。
+一次性使用，即撕即用，用完即扔，特別方便。
+廚房清潔、外出野餐都可以使用哦。
+採用竹纖維無紡布，不含熒光劑，抗菌無毒，不黏油，去污效果好，有一擦即淨的功效。
+✎商品特色✎
+🉐環保無紡布抹布
+🉐採用衛生清潔的不織布
+🉐具有衛生、清潔、吸水性強、無毒素、柔軟耐洗、不易生菌，
+🉐有一擦即淨的功效唷！
+✎商品規格✎一套6 卷
+◎商品材質：無紡布
+◎商品尺寸：50張 (每片20x30cm)`,
+      video: `你是一個youtube short 平台的產品推廣專家, 需要給你我的產品資料, 你用非常吸引的方式去用英文寫文案出來, 去吸引消息者注意及購買. 同時要提供
+1. 吸引人的headling
+2. 相関的hashtags
+3. 相関的CHANNEL TAGS, 用@開頭
+4. 相関的tags, 要用","去分開
+5. 我們的網上聯系方式: http://bit.ly/1FBLIVECHAT
+6. 我們的web: blisstravel.life
+明白我的要求嗎?`,
+    };
 
     const TYPE_INFO = {
       short: { name: '短文案', file: '短文案', dot: 'dot-short' },
@@ -127,6 +178,74 @@
       video: { name: '視頻文案', file: '視頻文案', dot: 'dot-video' },
     };
 
+    // ==================== 狀態 ====================
+    let history = [];
+    let currentResult = null;
+    let currentProductName = '';
+    let activeTab = 'short';
+
+    // ==================== API Key 管理 ====================
+    function getApiKey() {
+      return localStorage.getItem('dashscope_api_key') || '';
+    }
+    function getModel() {
+      return localStorage.getItem('dashscope_model') || 'qwen-plus';
+    }
+
+    function openSettings() {
+      document.getElementById('apiKeyInput').value = getApiKey();
+      document.getElementById('modelInput').value = getModel();
+      document.getElementById('settingsModal').classList.add('show');
+    }
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.remove('show');
+    }
+    function saveSettings() {
+      localStorage.setItem('dashscope_api_key', document.getElementById('apiKeyInput').value.trim());
+      localStorage.setItem('dashscope_model', document.getElementById('modelInput').value.trim());
+      closeSettings();
+      alert('已保存！');
+    }
+
+    // 如果沒有 API Key，自動彈出設定
+    if (!getApiKey()) {
+      setTimeout(openSettings, 500);
+    }
+
+    // ==================== DashScope 調用 ====================
+    async function callDashscope(systemPrompt, userMessage) {
+      const apiKey = getApiKey();
+      const model = getModel();
+
+      if (!apiKey) {
+        throw new Error('請先設定 API Key');
+      }
+
+      const resp = await fetch(DASHSCOPE_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage },
+          ],
+        }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error(`API 錯誤 (${resp.status}): ${err}`);
+      }
+
+      const data = await resp.json();
+      return data.choices[0].message.content;
+    }
+
+    // ==================== 生成 ====================
     async function generateAll() {
       const name = document.getElementById('productName').value.trim();
       const url = document.getElementById('productUrl').value.trim();
@@ -139,65 +258,94 @@
         return;
       }
 
+      if (!getApiKey()) {
+        openSettings();
+        return;
+      }
+
       btn.disabled = true;
       status.className = 'status show loading';
       status.innerHTML = '⏳ Qwen 同時生成三種文案中... 通常需要 30-90 秒';
       document.getElementById('resultCard').style.display = 'none';
 
-      try {
-        const resp = await fetch('http://localhost:8000/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product_url: url, product_name: name, copy_type: 'all' }),
-        });
+      const userMessage = `${url} 超抵價，百幾蚊就可係BLISS SHOP入手 — ${name}`;
 
-        if (!resp.ok) {
-          const err = await resp.json();
-          throw new Error(err.detail || '生成失敗');
-        }
+      // 並行生成三種
+      const types = ['short', 'long', 'video'];
+      const promises = types.map(t => callDashscope(PROMPTS[t], userMessage));
+      const results = await Promise.allSettled(promises);
 
-        const data = await resp.json();
-        currentResult = data.results;
-        currentProductName = name;
-        currentProductUrl = url;
-        activeTab = 'short';
+      currentResult = {};
+      let successCount = 0;
 
-        const errorCount = data.errors ? data.errors.length : 0;
-        if (errorCount === 3) {
-          status.className = 'status show error';
-          status.textContent = '❌ 全部生成失敗：' + data.errors.join('; ');
-        } else if (errorCount > 0) {
-          status.className = 'status show success';
-          status.textContent = `⚠️ 部分成功（${3 - errorCount}/3），${errorCount} 個失敗`;
+      types.forEach((t, i) => {
+        if (results[i].status === 'fulfilled') {
+          currentResult[t] = { content: results[i].value, error: false };
+          successCount++;
         } else {
-          status.className = 'status show success';
-          status.textContent = '✅ 三種文案全部生成完成！';
+          currentResult[t] = { content: `❌ 生成失敗: ${results[i].reason.message}`, error: true };
         }
+      });
 
-        renderResults(name);
-        renderTabs();
+      currentProductName = name;
+      activeTab = types.find(t => !currentResult[t].error) || 'short';
 
-        history.unshift({
-          name,
-          url,
-          results: JSON.parse(JSON.stringify(data.results)),
-          time: new Date().toLocaleString('zh-HK'),
-        });
-        renderHistory();
+      if (successCount === 3) {
+        status.className = 'status show success';
+        status.textContent = '✅ 三種文案全部生成完成！';
+      } else if (successCount === 0) {
+        status.className = 'status show error';
+        status.textContent = '❌ 全部生成失敗';
+      } else {
+        status.className = 'status show success';
+        status.textContent = `⚠️ ${successCount}/3 成功，${3 - successCount} 個失敗`;
+      }
 
+      renderResults(name);
+      renderTabs();
+
+      history.unshift({
+        name,
+        url,
+        results: JSON.parse(JSON.stringify(currentResult)),
+        time: new Date().toLocaleString('zh-HK'),
+      });
+      renderHistory();
+
+      btn.disabled = false;
+    }
+
+    async function continueOne(type) {
+      const status = document.getElementById('status');
+      const info = TYPE_INFO[type];
+
+      if (!currentResult || !currentResult[type] || currentResult[type].error) return;
+
+      status.className = 'status show loading';
+      status.textContent = `⏳ 繼續生成${info.name}中...`;
+
+      try {
+        const content = await callDashscope(
+          PROMPTS[type],
+          `繼續生成剩餘的文案，從上次中斷的地方接著寫。以下是已生成的內容：\n\n${currentResult[type].content}`
+        );
+        currentResult[type].content += '\n\n' + content;
+        status.className = 'status show success';
+        status.textContent = `✅ ${info.name}繼續生成完成！`;
+        renderSections();
       } catch (e) {
         status.className = 'status show error';
         status.textContent = '❌ ' + e.message;
-      } finally {
-        btn.disabled = false;
       }
     }
 
+    // ==================== 渲染 ====================
     function renderTabs() {
       const el = document.getElementById('resultTabs');
       el.innerHTML = Object.entries(TYPE_INFO).map(([key, info]) => `
         <div class="tab ${key === activeTab ? 'active' : ''}" onclick="switchTab('${key}')">
           <span class="dot ${info.dot}"></span> ${info.name}
+          ${currentResult && currentResult[key] ? (currentResult[key].error ? '❌' : '✅') : ''}
         </div>
       `).join('');
     }
@@ -247,41 +395,7 @@
       return div.innerHTML;
     }
 
-    async function continueOne(type) {
-      const status = document.getElementById('status');
-      const info = TYPE_INFO[type];
-
-      if (!currentResult || !currentResult[type] || currentResult[type].error) return;
-
-      status.className = 'status show loading';
-      status.textContent = `⏳ 繼續生成${info.name}中...`;
-
-      try {
-        const resp = await fetch('http://localhost:8000/api/continue', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            product_name: currentProductName,
-            previous_content: currentResult[type].content,
-            copy_type: type,
-          }),
-        });
-
-        if (!resp.ok) throw new Error('繼續生成失敗');
-
-        const data = await resp.json();
-        currentResult[type].content = currentResult[type].content + '\n\n' + data.content;
-
-        status.className = 'status show success';
-        status.textContent = `✅ ${info.name}繼續生成完成！`;
-        renderSections();
-
-      } catch (e) {
-        status.className = 'status show error';
-        status.textContent = '❌ ' + e.message;
-      }
-    }
-
+    // ==================== 複製 / 下載 ====================
     function copyOne(type) {
       navigator.clipboard.writeText(currentResult[type].content);
       alert(TYPE_INFO[type].name + ' 已複製！');
@@ -304,6 +418,7 @@
       });
     }
 
+    // ==================== 歷史 ====================
     function renderHistory() {
       const el = document.getElementById('history');
       if (history.length === 0) {
@@ -314,9 +429,9 @@
         const types = Object.keys(TYPE_INFO).filter(t => h.results[t] && !h.results[t].error);
         return `
           <div class="history-item" onclick="showHistory(${i})">
-            <div class="name">${h.name} <span class="dot dot-all" style="width:6px;height:6px;"></span> ${types.length}/3</div>
+            <div class="name">${h.name} ${types.length}/3</div>
             <div class="meta">${h.time} · ${types.map(t => TYPE_INFO[t].name).join(' / ')}</div>
-            <div class="preview">${h.results.short.content.substring(0, 80)}...</div>
+            <div class="preview">${h.results.short ? h.results.short.content.substring(0, 80) : '...'}...</div>
           </div>
         `;
       }).join('');
@@ -326,8 +441,7 @@
       const h = history[i];
       currentResult = JSON.parse(JSON.stringify(h.results));
       currentProductName = h.name;
-      currentProductUrl = h.url;
-      activeTab = 'short';
+      activeTab = Object.keys(TYPE_INFO).find(t => h.results[t] && !h.results[t].error) || 'short';
       document.getElementById('productName').value = h.name;
       document.getElementById('productUrl').value = h.url;
       renderResults(h.name);
