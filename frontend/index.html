@@ -413,7 +413,6 @@ function buildModelSelect(providerOverride){
     // Only show stored model if it belongs to this provider's list
     const validModel=models.includes(storedModel)?storedModel:PROVIDERS[p].defaultModel;
     sel.innerHTML=models.map(m=>`<option value="${m}" ${m===validModel?'selected':''}>${m}</option>`).join('');
-    sel.innerHTML=html;
     document.getElementById('modelHint').textContent='';
     const txt=document.getElementById('customModelInput');
     if(txt)txt.remove();
