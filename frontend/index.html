@@ -384,10 +384,11 @@ function buildProviderSelect(){
   toggleCustomUrl();
 }
 
-function buildModelSelect(){
-  const p=getProvider();
+function buildModelSelect(providerOverride){
+  const p=providerOverride||getProvider();
   const sel=document.getElementById('modelSelect');
-  const currentModel=getModel();
+  const storedModel=localStorage.getItem('bf_model_'+p);
+  const currentModel=storedModel||PROVIDERS[p].defaultModel;
   const models=PROVIDERS[p].models;
   if(models.length===0){
     // Custom: free text input via datalist
@@ -420,8 +421,8 @@ function buildModelSelect(){
   }
 }
 
-function toggleCustomUrl(){
-  const p=getProvider();
+function toggleCustomUrl(providerOverride){
+  const p=providerOverride||getProvider();
   const show=PROVIDERS[p].customUrl;
   document.getElementById('customUrlInput').style.display=show?'block':'none';
   document.querySelector('[data-i18n="customUrlLabel"]').style.display=show?'block':'none';
@@ -432,8 +433,8 @@ function onProviderChange(){
   const p=document.getElementById('providerSelect').value;
   // Update key placeholder
   document.getElementById('apiKeyInput').placeholder=PROVIDERS[p].keyPlaceholder;
-  buildModelSelect();
-  toggleCustomUrl();
+  buildModelSelect(p);
+  toggleCustomUrl(p);
   // Show stored key for this provider
   document.getElementById('apiKeyInput').value=localStorage.getItem('bf_key_'+p)||'';
 }
