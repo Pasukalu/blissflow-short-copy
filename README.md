@@ -38,7 +38,7 @@
 | Provider | Models | API Key URL |
 |----------|--------|------------|
 | **DashScope (Qwen)** | qwen3.7-plus, qwen-plus, qwen-max, qwen-turbo, qwen3-235b-a22b | [Get Key](https://dashscope.console.aliyun.com/apiKey) |
-| **DeepSeek** | deepseek-chat, deepseek-reasoner | [Get Key](https://platform.deepseek.com/api_keys) |
+| **DeepSeek** | deepseek-v4-flash, deepseek-v4-pro | [Get Key](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | gpt-4o, gpt-4o-mini, gpt-4-turbo, o1-mini | [Get Key](https://platform.openai.com/api-keys) |
 | **OpenRouter** | gemini-2.0-flash, claude-3.5-sonnet, llama-3.3-70b, qwen-2.5-72b | [Get Key](https://openrouter.ai/keys) |
 | **Custom** | Any model name | Any OpenAI-compatible endpoint |
