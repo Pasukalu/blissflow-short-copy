@@ -23,7 +23,7 @@
 
 1. **Open the app**
 
-   Just open `frontend/商品文案生成器多語言版.html` in any modern browser. No build step, no server needed.
+   Just open `frontend/index.html` in any modern browser. No build step, no server needed.
 
 2. **Choose your provider & set API Key**
 
@@ -59,7 +59,7 @@ Each provider stores its own API Key and model selection independently. Switch p
 ```
 blissflow-short-copy/
 ├── frontend/
-│   └── 商品文案生成器多語言版.html   # The entire app (single file)
+│   └── index.html                   # The entire app (single file)
 ├── backend/                           # Legacy backend (not required)
 │   ├── main.py
 │   └── requirements.txt
