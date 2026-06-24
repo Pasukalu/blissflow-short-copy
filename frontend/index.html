@@ -410,10 +410,9 @@ function buildModelSelect(providerOverride){
     txt.value=currentModel;
   }else{
     sel.style.display='block';
-    const hasCurrent=models.includes(currentModel);
-    let html='';
-    if(!hasCurrent&&currentModel){html+=`<option value="${currentModel}">${currentModel} (custom)</option>`;}
-    models.forEach(m=>html+=`<option value="${m}" ${m===currentModel?'selected':''}>${m}</option>`);
+    // Only show stored model if it belongs to this provider's list
+    const validModel=models.includes(storedModel)?storedModel:PROVIDERS[p].defaultModel;
+    sel.innerHTML=models.map(m=>`<option value="${m}" ${m===validModel?'selected':''}>${m}</option>`).join('');
     sel.innerHTML=html;
     document.getElementById('modelHint').textContent='';
     const txt=document.getElementById('customModelInput');
