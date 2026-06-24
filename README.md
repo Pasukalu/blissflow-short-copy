@@ -1,17 +1,19 @@
 # BlissFlow Copy Generator
 
-> AI-powered product copy generator for e-commerce — short copy, long copy, and video scripts in one click.
+> AI-powered product copy generator for e-commerce — short copy, long copy, and video scripts in one click. Supports multiple LLM providers.
 
 ![BlissFlow](https://img.shields.io/badge/BlissFlow-Copy%20Generator-66%25%200.14%2035)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![Pure Frontend](https://img.shields.io/badge/Pure%20Frontend-✓-success)
+![Multi Provider](https://img.shields.io/badge/Multi%20Provider-✓-success)
 
 ## ✨ Features
 
 - **One-click generation** — Generate short copy, long copy, and video scripts simultaneously
+- **Multi-provider support** — DashScope (Qwen) / DeepSeek / OpenAI / OpenRouter / Custom OpenAI-compatible API
 - **Three languages UI** — 繁中 / English / 日本語 interface switcher
 - **Multi-language output** — Copy generated in Cantonese, Japanese, and English
-- **History** — All generated copies saved locally for review
+- **History** — All generated copies saved locally with provider & model info
 - **Download** — Export each copy as TXT file
 - **Dark mode** — Warm humanist design with dark/light theme toggle
 - **Pure frontend** — No backend required, API key stored in browser localStorage
@@ -23,22 +25,34 @@
 
    Just open `frontend/商品文案生成器多語言版.html` in any modern browser. No build step, no server needed.
 
-2. **Set your API Key**
+2. **Choose your provider & set API Key**
 
-   Click "Set API Key" and paste your [DashScope API Key](https://dashscope.console.aliyun.com/apiKey).
+   Click "API Settings" → Select a provider → Paste your API Key → Pick a model → Save.
 
 3. **Generate**
 
    Enter product name + URL → Click "Generate All Three" → Wait 30-90 seconds → Done!
+
+## 🔌 Supported Providers
+
+| Provider | Models | API Key URL |
+|----------|--------|------------|
+| **DashScope (Qwen)** | qwen3.7-plus, qwen-plus, qwen-max, qwen-turbo, qwen3-235b-a22b | [Get Key](https://dashscope.console.aliyun.com/apiKey) |
+| **DeepSeek** | deepseek-chat, deepseek-reasoner | [Get Key](https://platform.deepseek.com/api_keys) |
+| **OpenAI** | gpt-4o, gpt-4o-mini, gpt-4-turbo, o1-mini | [Get Key](https://platform.openai.com/api-keys) |
+| **OpenRouter** | gemini-2.0-flash, claude-3.5-sonnet, llama-3.3-70b, qwen-2.5-72b | [Get Key](https://openrouter.ai/keys) |
+| **Custom** | Any model name | Any OpenAI-compatible endpoint |
+
+Each provider stores its own API Key and model selection independently. Switch providers anytime without losing settings.
 
 ## 🛠 Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Single HTML file, vanilla JS, CSS custom properties |
-| API | [DashScope](https://dashscope.aliyun.com) (Qwen models) |
+| API | OpenAI-compatible `/v1/chat/completions` (works with any provider) |
 | Design | Warm Humanist system — Fraunces + DM Sans, OKLCH colors |
-| Storage | Browser localStorage (API key, language, theme, history) |
+| Storage | Browser localStorage (per-provider keys, language, theme, history) |
 
 ## 📁 Project Structure
 
@@ -64,10 +78,10 @@ blissflow-short-copy/
 ## 🔧 Configuration
 
 ### API Key
-Get your DashScope API Key from [Alibaba Cloud DashScope](https://dashscope.console.aliyun.com/apiKey).
+Each provider has its own key storage (`bf_key_<provider>` in localStorage). Keys are never sent anywhere except directly to the provider's API endpoint.
 
 ### Model
-Default model is `qwen3.7-plus`. You can change it in Settings.
+Each provider has a recommended model list in the Settings dropdown. For the "Custom" provider, you can type any model name manually.
 
 ### Prompts
 The system prompts for short/long/video copy are defined in the `PROMPTS` object inside the HTML file. Customize them to fit your brand voice.
@@ -79,7 +93,7 @@ The UI supports three languages:
 - **English**
 - **日本語** (Japanese)
 
-Language preference is saved in `localStorage`. The Qwen-generated copy is always multi-language (Cantonese + Japanese + English) regardless of UI language.
+Language preference is saved in `localStorage`. The generated copy is always multi-language (Cantonese + Japanese + English) regardless of UI language.
 
 ## 📝 License
 
@@ -87,10 +101,11 @@ MIT License — see [LICENSE](LICENSE) file.
 
 ## 🤝 Contributing
 
-This is part of the larger [BlissFlow](https://github.com/user/blissflow) open-source e-commerce automation project. Contributions welcome!
+This is part of the larger BlissFlow open-source e-commerce automation project. Contributions welcome!
 
 ## 🔗 Related
 
-- [BlissFlow](https://github.com/user/blissflow) — Full SaaS platform (Next.js + FastAPI + n8n)
+- [BlissFlow](https://github.com/Pasukalu/blissflow) — Full SaaS platform (Next.js + FastAPI + n8n)
 - [DashScope API Docs](https://help.aliyun.com/zh/dashscope/)
-- [Qwen AI](https://chat.qwen.ai/)
+- [DeepSeek API Docs](https://platform.deepseek.com/api-docs)
+- [OpenRouter Docs](https://openrouter.ai/docs)
