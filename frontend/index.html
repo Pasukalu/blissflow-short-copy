@@ -2,162 +2,301 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BlissFlow — 文案生成器</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* === Fonts: Plus Jakarta Sans (display) + Instrument Sans (body) === */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap');
+
+/* === OKLCH Color System — warm tinted neutrals + bold accent === */
 :root {
-  --fg: #000; --bg: #fff; --sel: #79ffe1;
-  --a1: #fafafa; --a2: #eaeaea; --a3: #999; --a4: #888; --a5: #666;
-  --blue: #0070f3; --red: #ee0000; --purple: #7928ca; --pink: #ff0080;
-  --blue-l: #e6f6ff; --red-l: #ffeaea;
-  --r: 6px; --rs: 4px;
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Tinted neutrals (warm hue ~50) */
+  --bg:          oklch(99% 0.005 50);
+  --surface:     oklch(97% 0.008 50);
+  --surface-2:   oklch(94% 0.01 50);
+  --border:      oklch(90% 0.012 50);
+  --border-2:    oklch(86% 0.014 50);
+  --text:        oklch(22% 0.015 50);
+  --text-2:      oklch(45% 0.012 50);
+  --text-3:      oklch(60% 0.01 50);
+  
+  /* Brand accent — deep coral/terracotta */
+  --accent:      oklch(62% 0.19 28);
+  --accent-hi:   oklch(68% 0.17 28);
+  --accent-lo:   oklch(52% 0.16 28);
+  --accent-bg:   oklch(95% 0.03 28);
+  
+  /* Semantic */
+  --ok:          oklch(55% 0.15 145);
+  --ok-bg:       oklch(95% 0.03 145);
+  --err:         oklch(55% 0.18 25);
+  --err-bg:      oklch(95% 0.03 25);
+  
+  /* Type */
+  --font-display: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-body: 'Instrument Sans', -apple-system, sans-serif;
+  
+  /* Spacing scale (4pt base) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+  --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
+  
+  /* Motion */
+  --ease: cubic-bezier(0.25, 1, 0.5, 1);
+  --dur-fast: 120ms; --dur: 220ms; --dur-slow: 400ms;
 }
+
 [data-theme="dark"] {
-  --fg: #ededed; --bg: #000;
-  --a1: #111; --a2: #333; --a3: #444; --a4: #666; --a5: #888;
-  --blue-l: #002a44; --red-l: #330000;
+  --bg:        oklch(14% 0.008 50);
+  --surface:   oklch(18% 0.01 50);
+  --surface-2: oklch(22% 0.012 50);
+  --border:    oklch(28% 0.012 50);
+  --border-2:  oklch(34% 0.014 50);
+  --text:      oklch(92% 0.01 50);
+  --text-2:    oklch(72% 0.012 50);
+  --text-3:    oklch(55% 0.01 50);
+  --accent:    oklch(68% 0.16 28);
+  --accent-hi: oklch(74% 0.14 28);
+  --accent-lo: oklch(58% 0.15 28);
+  --accent-bg: oklch(22% 0.04 28);
+  --ok-bg:     oklch(22% 0.04 145);
+  --err-bg:    oklch(22% 0.04 25);
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: var(--font); background: var(--bg); color: var(--fg); font-size: 16px; -webkit-font-smoothing: antialiased; transition: background .2s, color .2s; }
-::selection { background: var(--sel); color: #000; }
 
-.page { min-height: 100vh; display: flex; flex-direction: column; }
-.header { border-bottom: 1px solid var(--a2); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
-.header-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; letter-spacing: -.02em; }
-.header-logo .mark { width: 20px; height: 20px; background: var(--fg); clip-path: polygon(50% 0,100% 50%,50% 100%,0 50%); }
-.theme-toggle { width:36px; height:36px; border-radius:var(--rs); border:1px solid var(--a2); background:var(--bg); cursor:pointer; display:flex; align-items:center; justify-content:center; transition: border-color .15s; }
-.theme-toggle:hover { border-color: var(--a3); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-.main { flex:1; max-width:720px; width:100%; margin:0 auto; padding:48px 24px; }
-h1 { font-size:36px; font-weight:700; letter-spacing:-.04em; line-height:1.2; }
-h2 { font-size:22px; font-weight:600; letter-spacing:-.02em; }
-.desc { color: var(--a4); font-size:16px; margin-top:8px; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
 
-.card { border:1px solid var(--a2); border-radius:var(--r); padding:24px; background:var(--bg); }
-.card+.card { margin-top:16px; }
+::selection { background: var(--accent); color: oklch(99% 0.005 50); }
 
-.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
-.fg { display:flex; flex-direction:column; gap:6px; }
-.label { font-size:13px; font-weight:500; color:var(--a5); }
-.input { width:100%; height:40px; padding:0 12px; border:1px solid var(--a2); border-radius:var(--rs); background:var(--bg); color:var(--fg); font-family:var(--font); font-size:14px; transition: border-color .15s, box-shadow .15s; }
-.input:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-l); }
-.input::placeholder { color: var(--a3); }
+/* === Layout === */
+.page { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
 
-.btn { height:40px; padding:0 20px; border:1px solid var(--a2); border-radius:var(--rs); background:var(--fg); color:var(--bg); font-family:var(--font); font-size:14px; font-weight:500; cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:8px; justify-content:center; }
-.btn:hover { opacity:.85; }
-.btn:disabled { opacity:.4; cursor:not-allowed; }
-.btn-sec { background:var(--bg); color:var(--fg); }
-.btn-sec:hover { background:var(--a1); opacity:1; }
-.btn-grad { background:linear-gradient(90deg,var(--purple),var(--pink)); color:#fff; border:none; height:44px; font-size:15px; font-weight:600; width:100%; }
-.btn-sm { height:32px; padding:0 12px; font-size:13px; }
+.header {
+  padding: var(--s-4) var(--s-5);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: var(--s-2); font-family: var(--font-display); font-weight: 800; font-size: 18px; letter-spacing: -0.03em; }
+.brand-mark { width: 14px; height: 14px; background: var(--accent); border-radius: 2px; transform: rotate(45deg); }
 
-.status { padding:10px 14px; border-radius:var(--rs); font-size:13px; margin-bottom:16px; display:none; border:1px solid; }
-.status.show { display:block; }
-.status.loading { background:var(--blue-l); border-color:var(--blue); color:var(--blue); }
-.status.error { background:var(--red-l); border-color:var(--red); color:var(--red); }
-.status.success { background:var(--blue-l); border-color:#50e3c2; color:var(--blue); }
+.theme-btn {
+  width: 36px; height: 36px; border: 1px solid var(--border); background: var(--bg);
+  border-radius: 6px; cursor: pointer; display: grid; place-items: center;
+  color: var(--text-2); transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.theme-btn:hover { border-color: var(--text-3); color: var(--text); }
 
-.tabs { display:flex; gap:2px; border-bottom:1px solid var(--a2); margin-bottom:16px; }
-.tab { padding:8px 16px; cursor:pointer; font-size:14px; font-weight:500; color:var(--a4); border-bottom:2px solid transparent; transition:color .15s,border-color .15s; display:flex; align-items:center; gap:6px; margin-bottom:-1px; }
-.tab:hover { color:var(--fg); }
-.tab.active { color:var(--fg); border-bottom-color:var(--fg); }
-.dot { width:6px; height:6px; border-radius:50%; display:inline-block; }
-.dot-short { background:#8b5cf6; } .dot-long { background:#f59e0b; } .dot-video { background:#3b82f6; }
+.main { flex: 1; max-width: 680px; width: 100%; margin: 0 auto; padding: var(--s-7) var(--s-5) var(--s-8); }
 
-.rh { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-.rt { font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
-.badge { font-size:11px; padding:2px 8px; border-radius:20px; font-weight:500; }
-.b-ok { background:var(--blue-l); color:var(--blue); } .b-err { background:var(--red-l); color:var(--red); }
-.rc { white-space:pre-wrap; word-break:break-word; font-size:14px; line-height:1.6; background:var(--a1); padding:16px; border-radius:var(--rs); border:1px solid var(--a2); max-height:480px; overflow-y:auto; }
-.ra { display:flex; gap:8px; }
+/* === Typography === */
+h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 44px); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; }
+.lede { color: var(--text-2); font-size: 17px; margin-top: var(--s-2); max-width: 42ch; }
+h2 { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
 
-.hi { cursor:pointer; padding:12px 0; border-bottom:1px solid var(--a2); transition:padding-left .15s; }
-.hi:last-child { border:none; } .hi:hover { padding-left:8px; }
-.hi .name { font-weight:500; font-size:14px; }
-.hi .meta { font-size:12px; color:var(--a4); margin-top:2px; }
-.hi .pv { font-size:13px; color:var(--a5); margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.empty { text-align:center; color:var(--a3); padding:32px; font-size:14px; }
+/* === Form === */
+.form-section { margin-top: var(--s-6); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); margin-bottom: var(--s-4); }
+.field { display: flex; flex-direction: column; gap: var(--s-1); }
+.label { font-size: 13px; font-weight: 600; color: var(--text-2); font-family: var(--font-display); }
+.input {
+  height: 44px; padding: 0 var(--s-3); border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+.input::placeholder { color: var(--text-3); }
 
-.mo { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; justify-content:center; align-items:center; backdrop-filter:blur(4px); }
-.mo.show { display:flex; }
-.mb { background:var(--bg); border:1px solid var(--a2); border-radius:var(--r); padding:24px; width:420px; max-width:90%; }
-.mb h2 { margin-bottom:4px; } .mb .d { color:var(--a4); font-size:13px; margin-bottom:20px; }
-.mb .fg+.fg { margin-top:12px; } .mb-a { display:flex; gap:8px; margin-top:20px; }
+/* === Buttons === */
+.btn {
+  height: 44px; padding: 0 var(--s-5); border: none; border-radius: 6px;
+  background: var(--text); color: var(--bg); font-family: var(--font-display); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  display: inline-flex; align-items: center; gap: var(--s-2); justify-content: center;
+}
+.btn:hover { opacity: 0.88; }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-cta {
+  background: var(--accent); color: oklch(99% 0.005 50); width: 100%; height: 48px; font-size: 15px; font-weight: 700;
+}
+.btn-cta:hover { background: var(--accent-hi); opacity: 1; }
+.btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--border); height: 34px; font-size: 13px; padding: 0 var(--s-3); }
+.btn-ghost:hover { background: var(--surface); color: var(--text); opacity: 1; }
 
-.sl { text-align:center; margin-top:12px; }
-.sl a { color:var(--a4); font-size:13px; cursor:pointer; text-decoration:none; transition:color .15s; }
-.sl a:hover { color:var(--fg); }
+/* === Status === */
+.status { padding: var(--s-3) var(--s-4); border-radius: 6px; font-size: 14px; margin-top: var(--s-4); display: none; }
+.status.show { display: block; animation: fade-in var(--dur) var(--ease); }
+.status.loading { background: var(--accent-bg); color: var(--accent-lo); }
+.status.error { background: var(--err-bg); color: var(--err); }
+.status.success { background: var(--ok-bg); color: var(--ok); }
 
-.footer { border-top:1px solid var(--a2); padding:16px 24px; text-align:center; font-size:12px; color:var(--a3); }
+/* === Tabs === */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: var(--s-5); }
+.tab {
+  padding: var(--s-3) var(--s-4); cursor: pointer; font-family: var(--font-display); font-size: 14px; font-weight: 600;
+  color: var(--text-3); border-bottom: 2px solid transparent; transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  margin-bottom: -1px; display: flex; align-items: center; gap: var(--s-2);
+}
+.tab:hover { color: var(--text-2); }
+.tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.dot { width: 7px; height: 7px; border-radius: 50%; }
+.dot-short { background: oklch(60% 0.15 300); }
+.dot-long { background: oklch(65% 0.15 70); }
+.dot-video { background: oklch(58% 0.16 250); }
 
-@media(max-width:600px) { .form-grid{grid-template-columns:1fr;} .main{padding:32px 16px;} h1{font-size:28px;} }
+/* === Result === */
+.result-wrap { margin-top: var(--s-6); animation: slide-up var(--dur-slow) var(--ease); }
+.result-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-4); }
+.result-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.result-actions { display: flex; gap: var(--s-2); }
+
+.result-body { margin-top: var(--s-3); }
+.result-label { font-size: 13px; font-weight: 600; color: var(--text-2); display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-2); font-family: var(--font-display); }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; font-family: var(--font-body); }
+.b-ok { background: var(--ok-bg); color: var(--ok); }
+.b-err { background: var(--err-bg); color: var(--err); }
+.result-content {
+  white-space: pre-wrap; word-break: break-word; font-size: 14px; line-height: 1.65;
+  background: var(--surface); padding: var(--s-4); border-radius: 6px; border: 1px solid var(--border);
+  max-height: 460px; overflow-y: auto; font-variant-numeric: tabular-nums;
+}
+.result-tools { display: flex; gap: var(--s-2); margin-top: var(--s-3); }
+
+/* === History === */
+.history-section { margin-top: var(--s-7); }
+.history-list { margin-top: var(--s-3); }
+.hi {
+  cursor: pointer; padding: var(--s-3) 0; border-bottom: 1px solid var(--border);
+  transition: padding-left var(--dur) var(--ease);
+}
+.hi:last-child { border-bottom: none; }
+.hi:hover { padding-left: var(--s-3); }
+.hi-name { font-weight: 600; font-size: 14px; font-family: var(--font-display); }
+.hi-meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.hi-pv { font-size: 13px; color: var(--text-3); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty { text-align: center; color: var(--text-3); padding: var(--s-6) 0; font-size: 14px; }
+
+/* === Settings === */
+.settings-link { margin-top: var(--s-3); text-align: center; }
+.settings-link a { color: var(--text-3); font-size: 13px; cursor: pointer; transition: color var(--dur) var(--ease); text-decoration: none; }
+.settings-link a:hover { color: var(--accent); }
+
+.modal-bg {
+  display: none; position: fixed; inset: 0; background: oklch(10% 0.005 50 / 0.5);
+  z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(6px);
+}
+.modal-bg.show { display: flex; animation: fade-in var(--dur) var(--ease); }
+.modal {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: var(--s-5); width: 400px; max-width: calc(100vw - 32px);
+  animation: slide-up var(--dur) var(--ease);
+}
+.modal h2 { margin-bottom: var(--s-1); }
+.modal-desc { color: var(--text-3); font-size: 13px; margin-bottom: var(--s-5); }
+.modal .field + .field { margin-top: var(--s-3); }
+.modal-actions { display: flex; gap: var(--s-2); margin-top: var(--s-5); }
+
+/* === Footer === */
+.footer { border-top: 1px solid var(--border); padding: var(--s-4) var(--s-5); text-align: center; font-size: 12px; color: var(--text-3); }
+
+/* === Animations === */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* === Responsive === */
+@media (max-width: 560px) {
+  .form-row { grid-template-columns: 1fr; }
+  .main { padding: var(--s-5) var(--s-4) var(--s-6); }
+}
+
+/* === Scrollbar === */
+.result-content::-webkit-scrollbar { width: 6px; }
+.result-content::-webkit-scrollbar-track { background: transparent; }
+.result-content::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
 </style>
 </head>
 <body data-theme="light">
+
 <div class="page">
   <header class="header">
-    <div class="header-logo"><div class="mark"></div><span>BlissFlow</span></div>
-    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
-      <svg id="iSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-      <svg id="iMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <span>BlissFlow</span>
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()" aria-label="切換主題">
+      <svg id="iSun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.5 4.5l1.5 1.5M18 18l1.5 1.5M2 12h2M20 12h2M4.5 19.5L6 18M18 6l1.5-1.5"/></svg>
+      <svg id="iMoon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M20 12.5A8 8 0 1 1 11.5 4a6.5 6.5 0 0 0 8.5 8.5z"/></svg>
     </button>
   </header>
 
   <main class="main">
     <h1>文案生成器</h1>
-    <p class="desc">BlissShop · Qwen AI · 短文案 / 長文案 / 視頻文案</p>
+    <p class="lede">輸入產品資訊，一鍵生成短文案、長文案、視頻文案三種格式。</p>
 
-    <div style="margin-top:32px">
-      <div class="card">
-        <div class="form-grid">
-          <div class="fg"><span class="label">產品名稱</span><input class="input" type="text" id="productName" placeholder="高腰A字傘裙" /></div>
-          <div class="fg"><span class="label">產品 URL</span><input class="input" type="text" id="productUrl" placeholder="https://blissshop.life/products/..." /></div>
+    <div class="form-section">
+      <div class="form-row">
+        <div class="field">
+          <label class="label" for="productName">產品名稱</label>
+          <input class="input" type="text" id="productName" placeholder="高腰A字傘裙" />
         </div>
-        <button class="btn btn-grad" id="generateAllBtn" onclick="generateAll()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          一鍵生成三種文案
-        </button>
-        <div class="sl"><a onclick="openSettings()">設定 API Key</a></div>
+        <div class="field">
+          <label class="label" for="productUrl">產品 URL</label>
+          <input class="input" type="text" id="productUrl" placeholder="https://blissshop.life/..." />
+        </div>
       </div>
+      <button class="btn btn-cta" id="genBtn" onclick="generateAll()">一鍵生成三種文案</button>
+      <div class="settings-link"><a onclick="openSettings()">設定 API Key</a></div>
     </div>
 
     <div id="status" class="status"></div>
 
-    <div id="resultCard" class="card" style="display:none;margin-top:16px">
-      <div class="rh" style="margin-bottom:16px">
-        <h2 id="resultTitle" style="font-size:18px"></h2>
-        <div class="ra">
-          <button class="btn btn-sec btn-sm" onclick="downloadAll()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            一鍵下載三個文件
-          </button>
+    <div id="resultWrap" class="result-wrap" style="display:none;">
+      <div class="result-head">
+        <span class="result-title" id="resultTitle"></span>
+        <div class="result-actions">
+          <button class="btn-ghost" onclick="downloadAll()">下載全部</button>
         </div>
       </div>
-      <div class="tabs" id="resultTabs"></div>
-      <div id="resultSections"></div>
+      <div class="tabs" id="tabs"></div>
+      <div id="resultBody"></div>
     </div>
 
-    <div style="margin-top:32px">
-      <h2 style="font-size:16px;margin-bottom:12px">歷史記錄</h2>
-      <div class="card"><div id="history"></div></div>
+    <div class="history-section">
+      <h2>歷史記錄</h2>
+      <div class="history-list" id="history"></div>
     </div>
   </main>
 
-  <footer class="footer">BlissFlow · Powered by DashScope API · 純前端運行</footer>
+  <footer class="footer">BlissFlow · DashScope API · 純前端運行</footer>
 </div>
 
-<div class="mo" id="settingsModal">
-  <div class="mb">
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
     <h2>設定</h2>
-    <p class="d">API Key 保存在瀏覽器 localStorage，不會上傳。</p>
-    <div class="fg"><span class="label">DashScope API Key</span><input class="input" type="password" id="apiKeyInput" placeholder="sk-..." /></div>
-    <div class="fg" style="margin-top:12px"><span class="label">模型</span><input class="input" type="text" id="modelInput" placeholder="qwen-plus" value="qwen-plus" /></div>
-    <div class="mb-a">
+    <p class="modal-desc">API Key 存於瀏覽器 localStorage，不會上傳。</p>
+    <div class="field">
+      <label class="label" for="apiKeyInput">DashScope API Key</label>
+      <input class="input" type="password" id="apiKeyInput" placeholder="sk-..." />
+    </div>
+    <div class="field">
+      <label class="label" for="modelInput">模型</label>
+      <input class="input" type="text" id="modelInput" placeholder="qwen3.7-plus" value="qwen3.7-plus" />
+    </div>
+    <div class="modal-actions">
       <button class="btn" onclick="saveSettings()">保存</button>
-      <button class="btn btn-sec" onclick="closeSettings()">取消</button>
+      <button class="btn-ghost" onclick="closeSettings()">取消</button>
     </div>
   </div>
 </div>
@@ -171,13 +310,13 @@ video:'你是一個youtube short 平台的產品推廣專家, 需要給你我的
 };
 const TI={short:{n:'短文案',f:'短文案',d:'dot-short'},long:{n:'長文案',f:'長文案',d:'dot-long'},video:{n:'視頻文案',f:'視頻文案',d:'dot-video'}};
 
-let history=[],currentResult=null,currentName='',activeTab='short';
+let history=[],CR=null,CN='',AT='short';
 
 function getKey(){return localStorage.getItem('ds_key')||'';}
-function getModel(){return localStorage.getItem('ds_model')||'qwen-plus';}
+function getModel(){return localStorage.getItem('ds_model')||'qwen3.7-plus';}
 function openSettings(){document.getElementById('apiKeyInput').value=getKey();document.getElementById('modelInput').value=getModel();document.getElementById('settingsModal').classList.add('show');}
 function closeSettings(){document.getElementById('settingsModal').classList.remove('show');}
-function saveSettings(){localStorage.setItem('ds_key',document.getElementById('apiKeyInput').value.trim());localStorage.setItem('ds_model',document.getElementById('modelInput').value.trim());closeSettings();alert('已保存！');}
+function saveSettings(){localStorage.setItem('ds_key',document.getElementById('apiKeyInput').value.trim());localStorage.setItem('ds_model',document.getElementById('modelInput').value.trim());closeSettings();}
 if(!getKey())setTimeout(openSettings,500);
 
 function toggleTheme(){const b=document.body;t=b.getAttribute('data-theme');b.setAttribute('data-theme',t==='light'?'dark':'light');document.getElementById('iSun').style.display=t==='light'?'none':'block';document.getElementById('iMoon').style.display=t==='light'?'block':'none';}
@@ -192,48 +331,52 @@ async function callDS(sp,um){
 
 async function generateAll(){
   const name=document.getElementById('productName').value.trim(),url=document.getElementById('productUrl').value.trim();
-  const btn=document.getElementById('generateAllBtn'),st=document.getElementById('status');
+  const btn=document.getElementById('genBtn'),st=document.getElementById('status');
   if(!name||!url){st.className='status show error';st.textContent='請填寫產品名稱和 URL';return;}
   if(!getKey()){openSettings();return;}
-  btn.disabled=true;st.className='status show loading';st.textContent='⏳ Qwen 同時生成三種文案中... 通常需要 30-90 秒';
-  document.getElementById('resultCard').style.display='none';
+  btn.disabled=true;st.className='status show loading';st.textContent='Qwen 同時生成三種文案中… 通常需要 30-90 秒';
+  document.getElementById('resultWrap').style.display='none';
   const um=url+' 超抵價，百幾蚊就可係BLISS SHOP入手 — '+name;
   const types=['short','long','video'];
-  const ps=types.map(t=>callDS(PROMPTS[t],um));
-  const rs=await Promise.allSettled(ps);
-  currentResult={};let ok=0;
-  types.forEach((t,i)=>{if(rs[i].status==='fulfilled'){currentResult[t]={content:rs[i].value,error:false};ok++;}else{currentResult[t]={content:'❌ 生成失敗: '+rs[i].reason.message,error:true};}});
-  currentName=name;activeTab=types.find(t=>!currentResult[t].error)||'short';
-  if(ok===3){st.className='status show success';st.textContent='✅ 三種文案全部生成完成！';}
-  else if(ok===0){st.className='status show error';st.textContent='❌ 全部生成失敗';}
-  else{st.className='status show success';st.textContent='⚠️ '+ok+'/3 成功';}
-  renderResults(name);renderTabs();
-  history.unshift({name,url,results:JSON.parse(JSON.stringify(currentResult)),time:new Date().toLocaleString('zh-HK')});
+  const rs=await Promise.allSettled(types.map(t=>callDS(PROMPTS[t],um)));
+  CR={};let ok=0;
+  types.forEach((t,i)=>{if(rs[i].status==='fulfilled'){CR[t]={c:rs[i].value,e:false};ok++;}else{CR[t]={c:'生成失敗: '+rs[i].reason.message,e:true};}});
+  CN=name;AT=types.find(t=>!CR[t].e)||'short';
+  if(ok===3)st.className='status show success',st.textContent='三種文案全部生成完成';
+  else if(ok===0)st.className='status show error',st.textContent='全部生成失敗';
+  else st.className='status show success',st.textContent=ok+'/3 成功，'+(3-ok)+' 個失敗';
+  renderResult(name);renderTabs();
+  history.unshift({name,url,results:JSON.parse(JSON.stringify(CR)),time:new Date().toLocaleString('zh-HK')});
   renderHistory();btn.disabled=false;
 }
 
 async function continueOne(type){
   const st=document.getElementById('status'),info=TI[type];
-  if(!currentResult||!currentResult[type]||currentResult[type].error)return;
-  st.className='status show loading';st.textContent='⏳ 繼續生成'+info.n+'中...';
-  try{const c=await callDS(PROMPTS[type],'繼續生成剩餘的文案，從上次中斷的地方接著寫。以下是已生成的內容：\n\n'+currentResult[type].content);
-  currentResult[type].content+='\n\n'+c;st.className='status show success';st.textContent='✅ '+info.n+'繼續生成完成！';renderSections();}
-  catch(e){st.className='status show error';st.textContent='❌ '+e.message;}
+  if(!CR||!CR[type]||CR[type].e)return;
+  st.className='status show loading';st.textContent='繼續生成'+info.n+'中…';
+  try{const c=await callDS(PROMPTS[type],'繼續生成剩餘的文案，從上次中斷的地方接著寫。以下是已生成的內容：\n\n'+CR[type].c);
+  CR[type].c+='\n\n'+c;st.className='status show success';st.textContent=info.n+'繼續生成完成';renderBody();}
+  catch(e){st.className='status show error';st.textContent=e.message;}
 }
 
-function renderTabs(){const el=document.getElementById('resultTabs');el.innerHTML=Object.entries(TI).map(([k,i])=>'<div class="tab '+(k===activeTab?'active':'')+'" onclick="switchTab(\''+k+'\')"><span class="dot '+i.d+'"></span> '+i.n+(currentResult&&currentResult[k]?(currentResult[k].error?' ❌':' ✅'):'')+'</div>').join('');}
-function switchTab(t){activeTab=t;renderTabs();renderSections();}
-function renderResults(name){document.getElementById('resultCard').style.display='block';document.getElementById('resultTitle').textContent=name;renderSections();}
-function renderSections(){const el=document.getElementById('resultSections');if(!currentResult)return;const info=TI[activeTab],data=currentResult[activeTab];
-  el.innerHTML='<div><div class="rh"><div class="rt"><span class="dot '+info.d+'"></span> '+info.n+(data.error?' <span class="badge b-err">失敗</span>':' <span class="badge b-ok">完成</span>')+'</div><div class="ra">'+(data.error?'':'<button class="btn btn-sec btn-sm" onclick="copyOne(\''+activeTab+'\')">📋 複製</button><button class="btn btn-sec btn-sm" onclick="continueOne(\''+activeTab+'\')">⏭️ 繼續</button><button class="btn btn-sec btn-sm" onclick="downloadOne(\''+activeTab+'\')">💾 下載</button>')+'</div></div><div class="rc">'+esc(data.content)+'</div></div>';}
+function renderTabs(){document.getElementById('tabs').innerHTML=Object.entries(TI).map(([k,i])=>'<div class="tab '+(k===AT?'active':'')+'" onclick="switchTab(\''+k+'\')"><span class="dot '+i.d+'"></span>'+i.n+(CR&&CR[k]?(CR[k].e?' ✕':' ✓'):'')+'</div>').join('');}
+function switchTab(t){AT=t;renderTabs();renderBody();}
+function renderResult(name){document.getElementById('resultWrap').style.display='block';document.getElementById('resultTitle').textContent=name;renderBody();}
+function renderBody(){
+  const info=TI[AT],data=CR[AT],el=document.getElementById('resultBody');
+  el.innerHTML='<div class="result-body"><div class="result-label"><span class="dot '+info.d+'"></span>'+info.n+(data.e?' <span class="badge b-err">失敗</span>':' <span class="badge b-ok">完成</span>')+'</div><div class="result-content">'+esc(data.c)+'</div>'+(data.e?'':'<div class="result-tools"><button class="btn-ghost" onclick="copyOne(\''+AT+'\')">複製</button><button class="btn-ghost" onclick="continueOne(\''+AT+'\')">繼續生成</button><button class="btn-ghost" onclick="downloadOne(\''+AT+'\')">下載</button></div>')+'</div>';
+}
 function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
-function copyOne(t){navigator.clipboard.writeText(currentResult[t].content);alert(TI[t].n+' 已複製！');}
-function downloadOne(t){const info=TI[t],b=new Blob([currentResult[t].content],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=currentName+'_'+info.f+'.txt';a.click();}
-function downloadAll(){Object.keys(TI).forEach(t=>{if(currentResult[t]&&!currentResult[t].error)downloadOne(t);});}
+function copyOne(t){navigator.clipboard.writeText(CR[t].c);alert(TI[t].n+' 已複製');}
+function downloadOne(t){const b=new Blob([CR[t].c],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=CN+'_'+TI[t].f+'.txt';a.click();}
+function downloadAll(){Object.keys(TI).forEach(t=>{if(CR[t]&&!CR[t].e)downloadOne(t);});}
 
-function renderHistory(){const el=document.getElementById('history');if(!history.length){el.innerHTML='<div class="empty">暫無記錄</div>';return;}
-  el.innerHTML=history.map((h,i)=>{const ts=Object.keys(TI).filter(t=>h.results[t]&&!h.results[t].error);return '<div class="hi" onclick="showHistory('+i+')"><div class="name">'+h.name+' '+ts.length+'/3</div><div class="meta">'+h.time+' · '+ts.map(t=>TI[t].n).join(' / ')+'</div><div class="pv">'+(h.results.short?h.results.short.content.substring(0,80):'...')+'...</div></div>';}).join('');}
-function showHistory(i){const h=history[i];currentResult=JSON.parse(JSON.stringify(h.results));currentName=h.name;activeTab=Object.keys(TI).find(t=>h.results[t]&&!h.results[t].error)||'short';document.getElementById('productName').value=h.name;document.getElementById('productUrl').value=h.url;renderResults(h.name);renderTabs();window.scrollTo({top:0,behavior:'smooth'});}
+function renderHistory(){
+  const el=document.getElementById('history');
+  if(!history.length){el.innerHTML='<div class="empty">暫無記錄</div>';return;}
+  el.innerHTML=history.map((h,i)=>{const ts=Object.keys(TI).filter(t=>h.results[t]&&!h.results[t].e);return '<div class="hi" onclick="showHistory('+i+')"><div class="hi-name">'+h.name+' '+ts.length+'/3</div><div class="hi-meta">'+h.time+' · '+ts.map(t=>TI[t].n).join(' / ')+'</div><div class="hi-pv">'+(h.results.short?h.results.short.c.substring(0,80):'…')+'…</div></div>';}).join('');
+}
+function showHistory(i){const h=history[i];CR=JSON.parse(JSON.stringify(h.results));CN=h.name;AT=Object.keys(TI).find(t=>h.results[t]&&!h.results[t].e)||'short';document.getElementById('productName').value=h.name;document.getElementById('productUrl').value=h.url;renderResult(h.name);renderTabs();window.scrollTo({top:0,behavior:'smooth'});}
 renderHistory();
 </script>
 </body>
