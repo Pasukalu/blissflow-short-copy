@@ -534,14 +534,14 @@ async function continueOne(type){
   catch(e){st.className='status show error';st.textContent=e.message;}
 }
 
-function renderTabs(){document.getElementById('tabs').innerHTML=Object.entries(TI).map(([k,i])=>'<div class="tab '+(k===AT?'active':'')+'" onclick="switchTab(\''+k+'\')" role="tab" tabindex="'+(k===AT?'0':'-1')+'"><span class="dot '+i.d+'"></span>'+i.n+(CR&&CR[k]?(CR[k].e?' ✕':' ✓'):'')+'</div>').join('');}
+function renderTabs(){document.getElementById('tabs').innerHTML=Object.entries(TI).map(([k,i])=>`<div class="tab ${k===AT?'active':''}" onclick="switchTab('${k}')" role="tab" tabindex="${k===AT?0:-1}"><span class="dot ${i.d}"></span>${i.n}${CR&&CR[k]?(CR[k].e?' ✕':' ✓'):''}</div>`).join('');}
 function switchTab(t){AT=t;renderTabs();renderBody();}
 function renderResult(name){document.getElementById('resultWrap').style.display='block';document.getElementById('resultTitle').textContent=name;renderBody();}
 function renderBody(){
   const info=TI[AT],data=CR[AT],el=document.getElementById('resultBody');
-  el.innerHTML='<div class="result-body"><div class="result-label"><span class="dot '+info.d+'"></span>'+info.n+(data.e?' <span class="badge b-err">失敗</span>':' <span class="badge b-ok">完成</span>')+'</div><div class="result-content" tabindex="0">'+esc(data.c)+'</div>'+(data.e?'':'<div class="result-tools"><button class="btn-ghost" onclick="copyOne(\''+AT+'\')">複製</button><button class="btn-ghost" onclick="continueOne(\''+AT+'\')">繼續生成</button><button class="btn-ghost" onclick="downloadOne(\''+AT+'\')">下載</button></div>')+'</div>';
+  el.innerHTML=`<div class="result-body"><div class="result-label"><span class="dot ${info.d}"></span>${info.n}${data.e?' <span class="badge b-err">失敗</span>':' <span class="badge b-ok">完成</span>'}</div><div class="result-content" tabindex="0">${esc(data.c)}</div>${data.e?'':`<div class="result-tools"><button class="btn-ghost" onclick="copyOne('${AT}')">複製</button><button class="btn-ghost" onclick="continueOne('${AT}')">繼續生成</button><button class="btn-ghost" onclick="downloadOne('${AT}')">下載</button></div>`}</div>`;
 }
-function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML();}
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
 function copyOne(t){navigator.clipboard.writeText(CR[t].c);alert(TI[t].n+' 已複製');}
 function downloadOne(t){const b=new Blob([CR[t].c],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=CN+'_'+TI[t].f+'.txt';a.click();}
 function downloadAll(){Object.keys(TI).forEach(t=>{if(CR[t]&&!CR[t].e)downloadOne(t);});}
